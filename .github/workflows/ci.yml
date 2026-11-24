@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    permissions:
+      contents: read
+    uses: myon-bioinformatics/myon-bioinformatics/.github/workflows/reusable-actionlint.yml@1368174821fb03be258ecf3312ce0ea809f6ea22
+
+  test:
+    name: unittest (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        include:
+          - os: windows-latest
+            python: "3.15"
+          - os: macos-latest
+            python: "3.15"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "latest"
+          python-version: "${{ matrix.python }}"
+          activate-environment: true
+      - name: Test without site-packages (stdlib only)
+        run: python -S -m unittest discover -s tests -v
+
+  node:
+    name: Node call by name (py_launch.cjs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Fetch the parent's py_launch.cjs (pinned)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: myon-bioinformatics/myon-bioinformatics
+          ref: 1368174821fb03be258ecf3312ce0ea809f6ea22
+          path: .parent
+          sparse-checkout: py_launch.cjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+      - name: put → entry → sync from Node
+        run: |
+          node -e '
+            const { call } = require("./.parent/py_launch.cjs");
+            const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
+            const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ccr-"));
+            const store = path.join(dir, "store.jsonl"), src = path.join(dir, "a.png");
+            fs.writeFileSync(src, Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+            const put = call("cacherecycle.py", "put", { args: [src, "demo.icon"], kwargs: { store } });
+            const got = call("cacherecycle.py", "entry", { args: ["demo.icon"], kwargs: { store } });
+            const synced = call("cacherecycle.py", "sync", { args: [["demo.icon"]], kwargs: { store, cache: path.join(dir, "cache") } });
+            if (put.mime !== "image/png" || Buffer.from(got.b64, "base64").length !== 8 || synced.written.length !== 1) process.exit(1);
+            console.log("✅", put.id, put.sha256.slice(0, 8), synced.written[0]);
+          '
