@@ -80,7 +80,7 @@ class StoreTests(Base):
 
     def test_ids_must_be_meaningful_and_safe_as_file_names(self):
         source = self.file("a.png")
-        for bad in ("", "A", "../x", "a/b", "a\\b", ".a", "a..b", "a.", "a b", None, 5):
+        for bad in ("", "../x", "a/b", "a\\b", ".a", "a..b", "a.", "a b", "-a", None, 5):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 ccr.put(source, bad, store=self.store)
 
@@ -104,6 +104,25 @@ class StoreTests(Base):
         self.store.write_text(line + line, encoding="utf-8")
         with self.assertRaises(ValueError):
             ccr.ls(store=self.store)
+
+    def test_ids_keep_the_repository_name_as_written_and_differ_by_more_than_case(self):
+        ccr.put(self.file("a.png"), "Err-o-RoadRunner.icon", store=self.store)
+        ccr.put(self.file("b.png"), "myon-bioinformatics.github.io.favicon", store=self.store)
+        ccr.put(self.file("a.png"), "aoi.icon", store=self.store)
+        self.assertEqual([m["id"] for m in ccr.ls(store=self.store)],           # 🔤 sorted ignoring case
+                         ["aoi.icon", "Err-o-RoadRunner.icon", "myon-bioinformatics.github.io.favicon"])
+        with self.assertRaises(ValueError):
+            ccr.put(self.file("b.png"), "err-o-roadrunner.icon", store=self.store)
+        line = self.store.read_text(encoding="utf-8").splitlines()[1]
+        self.store.write_text(self.store.read_text(encoding="utf-8") + line.replace("Err-o-RoadRunner", "ERR-O-ROADRUNNER") + "\n",
+                              encoding="utf-8")
+        with self.assertRaises(ValueError):
+            ccr.ls(store=self.store)
+
+    def test_the_fleet_store_names_each_repository_as_written(self):
+        repos = {m["id"].rsplit(".", 1)[0].split(".")[0] for m in ccr.ls()} - {"myon-bioinformatics"}
+        self.assertIn("Err-o-RoadRunner", repos)
+        self.assertFalse({"err-o-roadrunner", "ontautology", "browsertestkit", "myon-bioinformatics-github-io"} & repos)
 
     def test_an_unknown_id_suggests_the_nearest_one(self):
         ccr.put(self.file("a.png"), "portfolio.favicon", store=self.store)
@@ -239,7 +258,7 @@ class CommittedStoreTests(unittest.TestCase):
     def test_every_committed_entry_matches_its_hash_and_every_png_can_be_sized(self):
         lines = ccr.STORE.read_text(encoding="utf-8").splitlines() if ccr.STORE.exists() else []
         ids = [json.loads(line)["id"] for line in lines]
-        self.assertEqual(ids, sorted(set(ids)))
+        self.assertEqual(ids, sorted(set(ids), key=str.casefold))
         for meta in ccr.ls():
             with self.subTest(id=meta["id"]):
                 raw = ccr.get(meta["id"])
