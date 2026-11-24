@@ -3,6 +3,8 @@
 One JSONL store for small assets (icons, favicons, diagrams) kept as Base64 — standard library only.
 小さな資産を Base64 で 1 か所に集約し、一次ファイルは入れたら片付け、使う分だけ手元に戻す。
 
+🌐 [GitHub Pages（利用ガイド）](https://myon-bioinformatics.github.io/CaChereCyCle/) · 🏠 [Portfolio](https://myon-bioinformatics.github.io/)
+
 | | 置き場所 | 中身 | 寿命 |
 | --- | --- | --- | --- |
 | 🏛 保管庫 | `store.jsonl`（このリポジトリ） | 1 行 = 1 資産 `{"id","sha256","mime","b64"}`、id 順 | 恒久 |

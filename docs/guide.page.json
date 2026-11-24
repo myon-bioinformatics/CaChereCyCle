@@ -1,0 +1,190 @@
+{
+ "schema": "web-ui-page/1",
+ "title": "CaChereCyCle 利用ガイド",
+ "theme": "auto",
+ "description": "小さな資産（アイコン・favicon・概念図）を Base64 で 1 か所に。一次ファイルは入れたら片付け、使う分だけ手元に戻す。",
+ "blocks": [
+  {
+   "type": "badges",
+   "items": [
+    "📄 単一ファイル",
+    "🧰 標準ライブラリのみ",
+    "🐍 Python 3.11+",
+    "🟩 Node からも名前で呼べる"
+   ]
+  },
+  {
+   "type": "tabs",
+   "id": "guide",
+   "tabs": [
+    {
+     "label": "🧩 機能一覧",
+     "blocks": [
+      {
+       "type": "section",
+       "title": "🗂 置き場所",
+       "blocks": [
+        {
+         "type": "table",
+         "headers": [
+          "",
+          "📍 どこ",
+          "⏳ 寿命"
+         ],
+         "rows": [
+          [
+           "🏛 保管庫",
+           "store.jsonl（1 行 = 1 資産、id 順）",
+           "恒久"
+          ],
+          [
+           "🏷 参照",
+           "各リポジトリの JSON に id だけ",
+           "恒久"
+          ],
+          [
+           "📐 サイズ別",
+           "保管せず、その場で作る",
+           "作り直せる"
+          ],
+          [
+           "⚡ 手元",
+           "sync が書く cache（gitignore）",
+           "いつ消してもよい"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "type": "section",
+       "title": "📥 取得",
+       "blocks": [
+        {
+         "type": "text",
+         "text": "1 ファイルを置くだけで動きます（pip 不要）。保管庫ごと使うなら clone します。"
+        },
+        {
+         "type": "output",
+         "text": "git clone --depth 1 https://github.com/myon-bioinformatics/CaChereCyCle"
+        }
+       ]
+      },
+      {
+       "type": "section",
+       "title": "▶️ 実行",
+       "blocks": [
+        {
+         "type": "card",
+         "title": "📥 入れる",
+         "text": "同じ中身なら何もしません（♻️）。既定の上限は 1 MiB（--max-bytes 0 で解除）。",
+         "blocks": [
+          {
+           "type": "output",
+           "text": "$ python cacherecycle.py put icon.png --id demo.icon\n📥 demo.icon  image/png  41629 B  abbb280d\n$ python cacherecycle.py put icon.png --id demo.icon\n♻️ demo.icon  image/png  41629 B  abbb280d"
+          }
+         ]
+        },
+        {
+         "type": "card",
+         "title": "📋 一覧",
+         "text": "id 順に、種類・大きさ・sha256 の頭 8 桁。",
+         "blocks": [
+          {
+           "type": "output",
+           "text": "$ python cacherecycle.py ls\n🧊 Aoi.favicon  image/png  8170 B  01ceeead\n🧊 Aoi.icon  image/png  41223 B  050f383d\n🧊 ascii_artist.favicon  image/png  6845 B  80e2f639\n…"
+          }
+         ]
+        },
+        {
+         "type": "card",
+         "title": "📐 サイズ別に取り出す",
+         "text": "ID@192（透過を保つ）・ID@180:opaque（ホーム画面用）・ID@16,32,48（.ico）。縮小は平均、拡大は画素の複製。",
+         "blocks": [
+          {
+           "type": "output",
+           "text": "$ python cacherecycle.py get xprobe.icon@32 --out icon-32.png\n📤 xprobe.icon@32 → icon-32.png"
+          }
+         ]
+        },
+        {
+         "type": "card",
+         "title": "⚡ 手元にそろえる",
+         "text": "NAME=spec で出力名を指定。変わっていなければ作り直さず（✅）、自分が前に書いた不要分だけ片付けます（🧹）。",
+         "blocks": [
+          {
+           "type": "output",
+           "text": "$ python cacherecycle.py sync favicon.ico=xprobe.favicon@16,32,48 icon-180.png=xprobe.icon@180:opaque --cache _site\n✍️ _site/favicon.ico\n✍️ _site/icon-180.png\n$ python cacherecycle.py sync favicon.ico=xprobe.favicon@16,32,48 --cache _site\n✅ _site/favicon.ico\n🧹 _site/icon-180.png"
+          }
+         ]
+        },
+        {
+         "type": "card",
+         "title": "🗑 消す・🔤 打ち間違い",
+         "text": "id を間違えると近い id を出します。",
+         "blocks": [
+          {
+           "type": "output",
+           "text": "$ python cacherecycle.py drop demo.icon\n🗑 demo.icon  image/png  41629 B  abbb280d\n$ python cacherecycle.py get xprobe.icom --out x.png\n❌ unknown id 'xprobe.icom' (did you mean 'xprobe.icon'?)"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "section",
+       "title": "🐍 Python・🟩 Node から呼ぶ",
+       "blocks": [
+        {
+         "type": "output",
+         "text": "import cacherecycle as CCCC\nCCCC.sync([\"favicon.ico=xprobe.favicon@16,32,48\"], cache=\"_site\")   # ⚡ {\"written\", \"kept\", \"removed\"}\nCCCC.derive(\"xprobe.icon@192\")                                   # 📐 bytes"
+        },
+        {
+         "type": "output",
+         "text": "const { call } = require(\"./vendor/py_launch.cjs\");\ncall(\"cacherecycle.py\", \"sync\", { args: [[\"icon-192.png=xprobe.icon@192\"]], kwargs: { cache: \"_site\" } });"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🎞 GIF デモ",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "🎞 まだ GIF はありません。動く様子を GIF にしたら、ここに並びます。",
+       "muted": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "section",
+   "title": "🔗 リンク",
+   "blocks": [
+    {
+     "type": "links",
+     "items": [
+      {
+       "label": "📦 リポジトリ",
+       "href": "https://github.com/myon-bioinformatics/CaChereCyCle"
+      },
+      {
+       "label": "📖 README",
+       "href": "https://github.com/myon-bioinformatics/CaChereCyCle#readme"
+      },
+      {
+       "label": "📄 cacherecycle.py",
+       "href": "https://github.com/myon-bioinformatics/CaChereCyCle/blob/main/cacherecycle.py"
+      },
+      {
+       "label": "🏛 store.jsonl",
+       "href": "https://github.com/myon-bioinformatics/CaChereCyCle/blob/main/store.jsonl"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
