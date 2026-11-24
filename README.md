@@ -18,14 +18,26 @@ python cacherecycle.py get portfolio.favicon --out favicon.png
 python cacherecycle.py drop portfolio.favicon
 # ⚡ 参照している id だけを手元へ（自分が前に書いた不要分は 🧹 片付け）
 python cacherecycle.py sync portfolio.favicon portfolio.icon --cache _site/brand
+# 📐 サイズ別は保管せずその場で作る（NAME= で出力名を指定、元とファイルが変わらなければ作り直さない）
+python cacherecycle.py sync favicon.ico=xprobe.favicon@16,32,48 icon-180.png=xprobe.icon@180:opaque icon-512.png=xprobe.icon@512 --cache _site
 ```
+
+| 📐 spec | 出力 |
+| --- | --- |
+| `ID` | 保管したバイト列そのまま |
+| `ID@192` | 192 px の正方形 PNG（透過を保つ） |
+| `ID@180:opaque` | 透過を左上の色（透明なら白）で塗った PNG（ホーム画面用。iOS は透過を黒にする） |
+| `ID@16,32,48` | その 3 サイズを入れた .ico |
+
+縮小はブロック平均（透過で重み付け）、拡大は画素の複製なので、ドット絵はぼけない。元は 8 bit・非インターレースの PNG。
 
 ```python
 import cacherecycle as ccr
 ccr.put("icon.png", "portfolio.icon")      # 📥 → {"id", "sha256", "mime", "bytes", "changed"}
 ccr.get("portfolio.icon")                  # 📤 bytes（sha256 で検証）
 ccr.entry("portfolio.icon")                # 🔎 Base64 付きの 1 行（JSON のまま）
-ccr.sync(["portfolio.icon"], cache="_site/brand")  # ⚡ {"written", "kept", "removed"}
+ccr.derive("portfolio.icon@16,32,48")      # 📐 .ico の bytes（resize / ico も単体で呼べる）
+ccr.sync(["portfolio.icon", "icon-192.png=portfolio.icon@192"], cache="_site/brand")  # ⚡ {"written", "kept", "removed"}
 ```
 
 ```js

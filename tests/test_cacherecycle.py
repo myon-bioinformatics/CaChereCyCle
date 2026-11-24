@@ -6,10 +6,12 @@ import contextlib
 import io
 import json
 import os
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,9 +147,104 @@ class SyncTests(Base):
     def test_a_tampered_index_cannot_reach_outside_the_cache(self):
         outside = self.file("keep.png")
         self.cache.mkdir()
-        (self.cache / ".cacherecycle.json").write_text(json.dumps(["../keep.png"]), encoding="utf-8")
+        (self.cache / ".cacherecycle.json").write_text(json.dumps({"../keep.png": {}, "..": {}}), encoding="utf-8")
         ccr.sync([], store=self.store, cache=self.cache)
         self.assertTrue(outside.exists())
+
+
+def png(width: int, height: int, pixels: list[tuple[int, int, int, int]], filters: tuple[int, ...] = (0,)) -> bytes:
+    """A test PNG (RGBA, 8 bit) whose rows cycle through the given filter types, so the decoder meets all five."""
+    stride, raw, previous = width * 4, b"", bytes(width * 4)
+    for y in range(height):
+        line = bytes(v for p in pixels[y * width:(y + 1) * width] for v in p)
+        kind, out = filters[y % len(filters)], bytearray()
+        for i, v in enumerate(line):
+            a, b, c = (line[i - 4] if i >= 4 else 0), previous[i], (previous[i - 4] if i >= 4 else 0)
+            p = a + b - c
+            paeth = a if abs(p - a) <= abs(p - b) and abs(p - a) <= abs(p - c) else b if abs(p - b) <= abs(p - c) else c
+            out.append((v - (0, a, b, (a + b) >> 1, paeth)[kind]) & 255)
+        raw += bytes((kind,)) + bytes(out)
+        previous = line
+    return ccr._png_encode(1, 1, b"\0" * 4)[:8] + b"".join(
+        struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+        for kind, body in ((b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)),
+                           (b"IDAT", zlib.compress(raw)), (b"IEND", b"")))
+
+
+RED, BLUE, CLEAR = (255, 0, 0, 255), (0, 0, 255, 255), (0, 0, 0, 0)
+
+
+class SizeTests(Base):
+    def test_the_decoder_reads_every_filter_type(self):
+        pixels = [(x * 40, y * 50, (x * y) % 256, 255 - x) for y in range(5) for x in range(6)]
+        width, height, rgba = ccr._png_decode(png(6, 5, pixels, filters=(0, 1, 2, 3, 4)))
+        self.assertEqual((width, height, rgba), (6, 5, bytes(v for p in pixels for v in p)))
+
+    def test_growing_pixel_art_stays_crisp(self):
+        out = ccr._png_decode(ccr.resize(png(2, 1, [RED, BLUE]), 4))
+        self.assertEqual(out[2][:16], bytes(RED * 2 + BLUE * 2))
+        self.assertEqual(out[2][4 * 4 * 3:], bytes(CLEAR * 4))  # the 2:1 image is centred on a square
+
+    def test_shrinking_averages_and_keeps_transparency(self):
+        _, _, rgba = ccr._png_decode(ccr.resize(png(2, 2, [RED, CLEAR, CLEAR, CLEAR]), 1))
+        self.assertEqual(rgba, bytes((255, 0, 0, 64)))
+
+    def test_opaque_flattens_onto_the_top_left_colour_or_white(self):
+        _, _, rgba = ccr._png_decode(ccr.resize(png(2, 1, [BLUE, CLEAR]), 2, opaque=True))
+        self.assertEqual(set(rgba[3::4]), {255})
+        self.assertEqual(rgba[:4], bytes(BLUE))
+        _, _, white = ccr._png_decode(ccr.resize(png(1, 1, [CLEAR]), 1, opaque=True))
+        self.assertEqual(white, b"\xff\xff\xff\xff")
+
+    def test_ico_holds_each_size_as_png(self):
+        data = ccr.ico([ccr.resize(png(1, 1, [RED]), s) for s in (16, 32, 256)])
+        self.assertEqual(struct.unpack("<HHH", data[:6]), (0, 1, 3))
+        sizes = [struct.unpack("<BBBBHHII", data[6 + 16 * i:22 + 16 * i])[0] for i in range(3)]
+        self.assertEqual(sizes, [16, 32, 0])
+        with self.assertRaises(ValueError):
+            ccr.ico([b"not a png"])
+
+    def test_specs(self):
+        ccr.put(self.file("a.png", png(2, 2, [RED] * 4)), "a.icon", store=self.store)
+        self.assertEqual(ccr.derive("a.icon", store=self.store), ccr.get("a.icon", store=self.store))
+        self.assertEqual(ccr._png_decode(ccr.derive("a.icon@8", store=self.store))[:2], (8, 8))
+        self.assertEqual(ccr.derive("a.icon@16,32", store=self.store)[:4], b"\0\0\1\0")
+        for bad in ("a.icon@", "a.icon@0", "a.icon@8:dark", "a.icon:opaque", "a.icon@8,", "a.icon@99999"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                ccr.derive(bad, store=self.store)
+
+    def test_sizes_need_a_png_source(self):
+        ccr.put(self.file("a.svg", b"<svg/>"), "a.diagram", store=self.store)
+        with self.assertRaises(ValueError):
+            ccr.derive("a.diagram@16", store=self.store)
+
+    def test_sync_names_variants_and_keeps_them_while_nothing_changes(self):
+        ccr.put(self.file("a.png", png(2, 2, [RED] * 4)), "a.icon", store=self.store)
+        items = ["a.icon@16,32", "a.icon@180:opaque", "icon-192.png=a.icon@192"]
+        first = ccr.sync(items, store=self.store, cache=self.cache)
+        self.assertEqual(sorted(Path(p).name for p in first["written"]),
+                         ["a.icon.16-32.ico", "a.icon.180-opaque.png", "icon-192.png"])
+        self.assertEqual(len(ccr.sync(items, store=self.store, cache=self.cache)["kept"]), 3)
+        ccr.put(self.file("a.png", png(2, 2, [BLUE] * 4)), "a.icon", store=self.store)
+        self.assertEqual(len(ccr.sync(items, store=self.store, cache=self.cache)["written"]), 3)
+
+    def test_sync_names_must_be_plain_and_unique(self):
+        ccr.put(self.file("a.png"), "a.icon", store=self.store)
+        for items in (["../x.png=a.icon"], ["sub/x.png=a.icon"], [".hidden=a.icon"], ["x.png=a.icon", "x.png=a.icon@8"]):
+            with self.subTest(items=items), self.assertRaises(ValueError):
+                ccr.sync(items, store=self.store, cache=self.cache)
+
+
+class CommittedStoreTests(unittest.TestCase):
+    def test_every_committed_entry_matches_its_hash_and_every_png_can_be_sized(self):
+        lines = ccr.STORE.read_text(encoding="utf-8").splitlines() if ccr.STORE.exists() else []
+        ids = [json.loads(line)["id"] for line in lines]
+        self.assertEqual(ids, sorted(set(ids)))
+        for meta in ccr.ls():
+            with self.subTest(id=meta["id"]):
+                raw = ccr.get(meta["id"])
+                if meta["mime"] == "image/png":
+                    ccr._png_decode(raw)
 
 
 class InterfaceTests(Base):
