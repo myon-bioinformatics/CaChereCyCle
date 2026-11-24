@@ -2,7 +2,7 @@
 
 🏛 store.jsonl  one line per asset, sorted by id: {"id", "sha256", "mime", "b64"}. The store is the primary
                 copy: once a file is put, its original can be deleted.
-🏷 consumers    keep only ids in their own JSON (e.g. "assets": ["portfolio.favicon"]).
+🏷 consumers    keep only ids in their own JSON (e.g. "assets": ["OnTautoLogy.favicon"]).
 📐 variants     sizes are made on demand, never stored: ``ID@192`` (alpha kept), ``ID@180:opaque`` (home screen),
                 ``ID@16,32,48`` (one .ico holding those sizes).
 ⚡ sync(items)  writes ``ID`` / ``ID@…`` or ``NAME=ID@…`` into a git-ignored cache and removes the files it wrote
@@ -33,7 +33,7 @@ __version__ = "0.2.0"
 
 STORE = Path(__file__).with_name("store.jsonl")
 CACHE = Path(".cache") / "assets"
-_ID = re.compile(r"[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\Z")
+_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)*\Z")  # <Repository name>.<what>
 _SPEC = re.compile(r"(?P<id>[^@:=]+)(?:@(?P<sizes>[1-9][0-9]*(?:,[1-9][0-9]*)*)(?P<opaque>:opaque)?)?\Z")
 _NAME = re.compile(r"[A-Za-z0-9_-][A-Za-z0-9._-]*\Z")
 _MIME = mimetypes.MimeTypes()  # a fresh table: the same answer on every OS (no Windows registry)
@@ -42,7 +42,8 @@ _PNG = b"\x89PNG\r\n\x1a\n"
 
 def _id(value: object) -> str:
     if not isinstance(value, str) or not _ID.match(value):
-        raise ValueError(f"id must look like 'portfolio.favicon' (a-z 0-9 _ - and single dots): {value!r}")
+        raise ValueError(f"id must look like 'Err-o-RoadRunner.icon' — the repository name as written, a dot and "
+                         f"what it is (A-Z a-z 0-9 _ - and single dots): {value!r}")
     return value
 
 
@@ -54,8 +55,9 @@ def _load(store: str | os.PathLike[str]) -> dict[str, dict[str, str]]:
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if line.strip():
             row = json.loads(line)
-            if row.get("id") in rows:
-                raise ValueError(f"{path}:{number}: duplicate id {row['id']!r}")
+            same = [id for id in rows if id.casefold() == str(row.get("id")).casefold()]
+            if same:
+                raise ValueError(f"{path}:{number}: id {row['id']!r} repeats {same[0]!r} (ids differ by more than case)")
             rows[_id(row.get("id"))] = row
     return rows
 
@@ -63,7 +65,7 @@ def _load(store: str | os.PathLike[str]) -> dict[str, dict[str, str]]:
 def _save(store: str | os.PathLike[str], rows: dict[str, dict[str, str]]) -> None:
     path = Path(store)
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = "".join(json.dumps(rows[key], ensure_ascii=False, separators=(",", ":")) + "\n" for key in sorted(rows))
+    text = "".join(json.dumps(rows[key], ensure_ascii=False, separators=(",", ":")) + "\n" for key in sorted(rows, key=str.casefold))
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".tmp")
     with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(text)
@@ -98,6 +100,9 @@ def put(path: str | os.PathLike[str], id: str, *, mime: str | None = None,
     row = {"id": id, "sha256": hashlib.sha256(raw).hexdigest(), "mime": mime or guess or "application/octet-stream",
            "b64": base64.b64encode(raw).decode("ascii")}
     rows = _load(store)
+    same = [old for old in rows if old != id and old.casefold() == id.casefold()]
+    if same:
+        raise ValueError(f"id {id!r} differs from {same[0]!r} only by case (one file per name on Windows and macOS)")
     changed = rows.get(id) != row
     if changed:
         rows[id] = row
@@ -117,7 +122,7 @@ def get(id: str, *, store: str | os.PathLike[str] = STORE) -> bytes:
 
 def ls(*, store: str | os.PathLike[str] = STORE) -> list[dict[str, object]]:
     """📋 Every entry without its Base64, sorted by id."""
-    return [_meta(row) for _, row in sorted(_load(store).items())]
+    return [_meta(row) for _, row in sorted(_load(store).items(), key=lambda item: item[0].casefold())]
 
 
 def drop(id: str, *, store: str | os.PathLike[str] = STORE) -> dict[str, object]:
@@ -342,7 +347,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("put", help="📥 store a file under an id")
     p.add_argument("file")
-    p.add_argument("--id", required=True, help="🏷 meaningful id, e.g. portfolio.favicon")
+    p.add_argument("--id", required=True, help="🏷 id: the repository name as written, a dot and what it is, e.g. OnTautoLogy.favicon")
     p.add_argument("--mime", help="default: guessed from the file name")
     p.add_argument("--max-bytes", type=int, default=1 << 20, help="📏 size limit in bytes; 0 = no limit (default 1048576)")
     p = sub.add_parser("get", help="📤 write the bytes of a spec (ID, ID@192, ID@180:opaque, ID@16,32,48) to a file")
