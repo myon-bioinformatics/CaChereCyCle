@@ -32,12 +32,12 @@ python cacherecycle.py sync favicon.ico=xprobe.favicon@16,32,48 icon-180.png=xpr
 縮小はブロック平均（透過で重み付け）、拡大は画素の複製なので、ドット絵はぼけない。元は 8 bit・非インターレースの PNG。
 
 ```python
-import cacherecycle as ccr
-ccr.put("icon.png", "OnTautoLogy.icon")      # 📥 → {"id", "sha256", "mime", "bytes", "changed"}
-ccr.get("OnTautoLogy.icon")                  # 📤 bytes（sha256 で検証）
-ccr.entry("OnTautoLogy.icon")                # 🔎 Base64 付きの 1 行（JSON のまま）
-ccr.derive("OnTautoLogy.icon@16,32,48")      # 📐 .ico の bytes（resize / ico も単体で呼べる）
-ccr.sync(["OnTautoLogy.icon", "icon-192.png=OnTautoLogy.icon@192"], cache="_site/brand")  # ⚡ {"written", "kept", "removed"}
+import cacherecycle as CCCC
+CCCC.put("icon.png", "OnTautoLogy.icon")      # 📥 → {"id", "sha256", "mime", "bytes", "changed"}
+CCCC.get("OnTautoLogy.icon")                  # 📤 bytes（sha256 で検証）
+CCCC.entry("OnTautoLogy.icon")                # 🔎 Base64 付きの 1 行（JSON のまま）
+CCCC.derive("OnTautoLogy.icon@16,32,48")      # 📐 .ico の bytes（resize / ico も単体で呼べる）
+CCCC.sync(["OnTautoLogy.icon", "icon-192.png=OnTautoLogy.icon@192"], cache="_site/brand")  # ⚡ {"written", "kept", "removed"}
 ```
 
 ```js
