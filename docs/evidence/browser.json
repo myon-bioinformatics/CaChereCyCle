@@ -1,0 +1,217 @@
+{
+  "schema": "btk-evidence-gif/2",
+  "gif": "browser.gif",
+  "bytes": 355957,
+  "sha256": "acf3c931722c34a515236eeb1fe38213f2137c6f6e9c364174e789889507f0e3",
+  "frames": 14,
+  "canvas": "720x512",
+  "browser": "chromium 158.0.8127.36",
+  "executable": {
+    "source": "given",
+    "path": "/usr/bin/google-chrome"
+  },
+  "recorded": "2026-11-25",
+  "commit": "7e50f9f9f66026437254c4cc7b63bc2a697cceff",
+  "stills": {
+    "dir": null,
+    "files": []
+  },
+  "encoder": {
+    "module": "PySaiyanWeBoo gif.js",
+    "web_ui": "1d697e7f157bc75c11a6d2711475a31fc421179c",
+    "bytes": 355957,
+    "frames": 14,
+    "colors": 255,
+    "thin": 0,
+    "attempts": 1,
+    "stored": 14,
+    "merged": 0,
+    "buckets": 20414,
+    "overBudget": false,
+    "encodeMs": 560,
+    "images": 14,
+    "reused": 0,
+    "patches": 0,
+    "synthesized": 0,
+    "capture_s": 14.9
+  },
+  "limits": {
+    "colors": 255,
+    "max_bytes": null,
+    "max_frames": 300,
+    "last_hold_ms": 2000
+  },
+  "transfer": {
+    "screenshots": 14,
+    "png_bytes": 2107061,
+    "identical": 0,
+    "patches": 0,
+    "calls": 6,
+    "sent_bytes": 2809432,
+    "gif_bytes": 355957
+  },
+  "mapped": [],
+  "summary": {
+    "pass": 6,
+    "fail": 0
+  },
+  "shots": [
+    {
+      "label": "📘 利用ガイド · 機能一覧",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click label[for='ui-tabs-guide-1']",
+        "scroll 340"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
+    },
+    {
+      "label": "📚 機能全一覧（コードから自動生成）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click label[for='ui-tabs-guide-2']"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
+    },
+    {
+      "label": "📱 利用ガイド（スマホ幅）",
+      "url": "/index.html",
+      "viewport": "392x848",
+      "steps": [
+        "click label[for='ui-tabs-guide-1']"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
+    },
+    {
+      "label": "📥 put & 📋 ls（保管庫デモ）",
+      "url": "/demo.html",
+      "viewport": "1280x800",
+      "steps": [
+        "🔲 #step-put"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "CaChereCyCle build_demo.py"
+    },
+    {
+      "label": "📐 derive（サイズ展開 / .ico）",
+      "url": "/demo.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click #tab-derive",
+        "🔲 on-demand"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "CaChereCyCle build_demo.py"
+    },
+    {
+      "label": "⚡ sync（キャッシュ同期と掃除）",
+      "url": "/demo.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click #tab-sync"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "CaChereCyCle build_demo.py"
+    }
+  ],
+  "plan": [
+    {
+      "label": "📘 利用ガイド · 機能一覧",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "label[for='ui-tabs-guide-1']"
+        },
+        {
+          "scroll": 340
+        }
+      ]
+    },
+    {
+      "label": "📚 機能全一覧（コードから自動生成）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "label[for='ui-tabs-guide-2']"
+        }
+      ]
+    },
+    {
+      "label": "📱 利用ガイド（スマホ幅）",
+      "url": "/index.html",
+      "viewport": "392x848",
+      "steps": [
+        {
+          "click": "label[for='ui-tabs-guide-1']"
+        }
+      ]
+    },
+    {
+      "label": "📥 put & 📋 ls（保管庫デモ）",
+      "url": "/demo.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "frame": {
+            "selector": "#step-put",
+            "shape": "rect",
+            "color": "#10b981"
+          }
+        }
+      ]
+    },
+    {
+      "label": "📐 derive（サイズ展開 / .ico）",
+      "url": "/demo.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "#tab-derive"
+        },
+        {
+          "frame": {
+            "selector": "#step-derive",
+            "shape": "rect",
+            "color": "#38bdf8",
+            "label": "on-demand"
+          }
+        }
+      ]
+    },
+    {
+      "label": "⚡ sync（キャッシュ同期と掃除）",
+      "url": "/demo.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "#tab-sync"
+        }
+      ]
+    }
+  ]
+}

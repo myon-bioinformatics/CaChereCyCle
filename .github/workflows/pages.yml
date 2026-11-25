@@ -1,0 +1,35 @@
+name: Pages
+
+# Publishes the usage guide: docs/guide.page.json (a web-ui-page/1 spec, data only). The parent's reusable
+# workflow renders it with the PySaiyanWeBoo commit pinned there — no HTML, CSS or JS lives in this repository.
+# Pull requests build the page (an invalid spec fails there); only main deploys.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/guide.page.json"
+      - "docs/evidence/browser.gif"
+      - "store.jsonl"
+      - "cacherecycle.py"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths:
+      - "docs/guide.page.json"
+      - "docs/evidence/browser.gif"
+      - "store.jsonl"
+      - "cacherecycle.py"
+      - ".github/workflows/pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  pages:
+    uses: myon-bioinformatics/myon-bioinformatics/.github/workflows/reusable-pages-static.yml@c72e9eac615ed3d43b6fae24748dc8acff770e9e
+    with:
+      artifact_path: _site
+      guide_page: docs/guide.page.json
+      guide_assets: docs/evidence/browser.gif=demos/browser.gif
+      guide_brand: CaChereCyCle   # ♻️ icon and favicon from CaChereCyCle (CaChereCyCle.icon / CaChereCyCle.favicon)

@@ -1,0 +1,176 @@
+{
+  "schema": "web-ui-page/1",
+  "title": "♻️ CaChereCyCle 利用ガイド",
+  "theme": "modern",
+  "description": "小さな資産（アイコン・ファビコン・図）を Base64 として 1 か所の JSONL（store.jsonl）に保管し、一次ファイルは片付け、使う分だけ手元のキャッシュへサイズ展開して戻す標準ライブラリ製ツール。",
+  "icon": "./icon.png",
+  "favicon": "./favicon.png",
+  "blocks": [
+    {
+      "type": "badges",
+      "items": [
+        "📄 単一ファイル",
+        "🧰 標準ライブラリのみ",
+        "🐍 Python 3.11+",
+        "🟩 Node からも呼べる"
+      ]
+    },
+    {
+      "type": "tabs",
+      "id": "guide",
+      "tabs": [
+        {
+          "label": "🎞 GIF デモ",
+          "blocks": [
+            {
+              "type": "card",
+              "title": "♻️ 利用ガイドと動作デモ",
+              "text": "共通利用ガイドのタブ切替・機能一覧・スマホ幅表示と、cacherecycle.py による put / ls / derive（サイズ展開と .ico）/ sync（キャッシュ同期と掃除）の実動作を Chromium で記録したデモです。",
+              "blocks": [
+                {
+                  "type": "image",
+                  "src": "./demos/browser.gif",
+                  "alt": "CaChereCyCle の利用ガイド（機能一覧・機能全一覧・スマホ幅）と put / ls / derive / sync の実動作デモ"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "🧩 機能一覧",
+          "blocks": [
+            {
+              "type": "section",
+              "title": "📥 取得",
+              "blocks": [
+                {
+                  "type": "text",
+                  "text": "1 ファイルを置くだけで動きます（pip 不要）。"
+                },
+                {
+                  "type": "output",
+                  "text": "curl -fsSLO https://raw.githubusercontent.com/myon-bioinformatics/CaChereCyCle/main/cacherecycle.py"
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "title": "🏛 置き場所と寿命",
+              "blocks": [
+                {
+                  "type": "table",
+                  "headers": ["役割", "置き場所", "中身", "寿命"],
+                  "rows": [
+                    ["🏛 保管庫", "store.jsonl（このリポジトリ）", "1 行 = 1 資産 {\"id\",\"sha256\",\"mime\",\"b64\"}、id 順", "恒久"],
+                    ["🏷 参照", "各リポジトリの既存 JSON / pages.yml", "id だけ（例 OnTautoLogy.favicon）", "恒久"],
+                    ["⚡ 手元", ".cache/assets/（gitignore）", "sync が書く <id><ext>", "いつ消してもよい"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "title": "▶️ 実行",
+              "blocks": [
+                {
+                  "type": "card",
+                  "title": "📥 保管庫へ入れる（put）",
+                  "text": "同じ中身ならファイルを書き換えず ♻️ を返します（既定上限 1 MiB、--max-bytes 0 で解除）。GIF デモなど大きい媒体はファイルのまま残します。",
+                  "blocks": [
+                    {
+                      "type": "output",
+                      "text": "$ python cacherecycle.py put docs/brand/favicon.png --id OnTautoLogy.favicon\n📥 OnTautoLogy.favicon  image/png  1893 B  21609afe"
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "title": "📋 一覧・📤 取り出し・🗑 削除（ls / get / drop）",
+                  "text": "取り出し時に SHA-256 を検証し、破損や誤記を即座に検出します。",
+                  "blocks": [
+                    {
+                      "type": "output",
+                      "text": "$ python cacherecycle.py ls\n$ python cacherecycle.py get OnTautoLogy.favicon --out favicon.png\n$ python cacherecycle.py drop OnTautoLogy.favicon"
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "title": "⚡ 使う分だけ手元へ同期（sync）",
+                  "text": "ID@spec または NAME=ID@spec で手元キャッシュへ書き出します。変更がない派生画像は作り直さず、自分が前に書いた不要ファイルだけを 🧹 片付けます。",
+                  "blocks": [
+                    {
+                      "type": "output",
+                      "text": "$ python cacherecycle.py sync OnTautoLogy.favicon OnTautoLogy.icon --cache _site/brand\n$ python cacherecycle.py sync favicon.ico=xprobe.favicon@16,32,48 icon-180.png=xprobe.icon@180:opaque icon-512.png=xprobe.icon@512 --cache _site"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "title": "📐 サイズ展開の仕様",
+              "blocks": [
+                {
+                  "type": "text",
+                  "text": "元は 8 bit・非インターレースの PNG。縮小はブロック平均（透過で重み付け）、拡大は画素の複製なのでドット絵はぼけません。"
+                },
+                {
+                  "type": "table",
+                  "headers": ["spec", "出力"],
+                  "rows": [
+                    ["ID", "保管したバイト列そのまま"],
+                    ["ID@192", "192 px の正方形 PNG（透過を保つ）"],
+                    ["ID@180:opaque", "透過を左上の色（透明なら白）で塗った PNG（ホーム画面用）"],
+                    ["ID@16,32,48", "指定サイズをすべて格納した .ico"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "title": "🐍 Python / 🟩 Node から呼ぶ",
+              "blocks": [
+                {
+                  "type": "output",
+                  "text": "import cacherecycle as CCCC\nCCCC.put(\"icon.png\", \"OnTautoLogy.icon\")\nCCCC.get(\"OnTautoLogy.icon\")\nCCCC.sync([\"OnTautoLogy.icon\", \"icon-192.png=OnTautoLogy.icon@192\"], cache=\"_site/brand\")"
+                },
+                {
+                  "type": "output",
+                  "text": "const { call } = require(\"./vendor/py_launch.cjs\");\ncall(\"cacherecycle.py\", \"sync\", { args: [[\"OnTautoLogy.icon\"]], kwargs: { cache: \"_site/brand\" } });"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "title": "🔗 リンク",
+      "blocks": [
+        {
+          "type": "links",
+          "items": [
+            {
+              "label": "📦 リポジトリ",
+              "href": "https://github.com/myon-bioinformatics/CaChereCyCle"
+            },
+            {
+              "label": "📖 README",
+              "href": "https://github.com/myon-bioinformatics/CaChereCyCle#readme"
+            },
+            {
+              "label": "📄 cacherecycle.py",
+              "href": "https://github.com/myon-bioinformatics/CaChereCyCle/blob/main/cacherecycle.py"
+            },
+            {
+              "label": "🏛 store.jsonl",
+              "href": "https://github.com/myon-bioinformatics/CaChereCyCle/blob/main/store.jsonl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

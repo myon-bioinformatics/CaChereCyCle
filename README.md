@@ -1,5 +1,13 @@
 # ♻️ CaChereCyCle
 
+<p align="center">
+  <img src="https://myon-bioinformatics.github.io/CaChereCyCle/icon.png" alt="CaChereCyCle icon" width="160" />
+</p>
+
+[Icon](https://myon-bioinformatics.github.io/CaChereCyCle/icon.png) · [Favicon](https://myon-bioinformatics.github.io/CaChereCyCle/favicon.png) · 🌐 [Portfolio](https://myon-bioinformatics.github.io/)
+
+📘 [利用ガイド / Usage guide](https://myon-bioinformatics.github.io/CaChereCyCle/) (GitHub Pages)
+
 One JSONL store for small assets (icons, favicons, diagrams) kept as Base64 — standard library only.
 小さな資産を Base64 で 1 か所に集約し、一次ファイルは入れたら片付け、使う分だけ手元に戻す。
 
@@ -52,3 +60,16 @@ call("cacherecycle.py", "sync", { args: [["OnTautoLogy.icon"]], kwargs: { cache:
 - 🌐 公開リポジトリなので、公開してよい資産だけを置く
 
 Python 3.11+ · 🧪 `python -S -m unittest discover -s tests`
+
+## 🎞️ Demo
+
+![CaChereCyCle usage guide and live put / ls / derive / sync demo in Chromium](docs/evidence/browser.gif)
+
+🗓️ 2026-11-25 · 🧭 Chromium 158 · 🐧 Linux · receipt [`docs/evidence/browser.json`](docs/evidence/browser.json)
+
+同じ GIF は[利用ガイド](https://myon-bioinformatics.github.io/CaChereCyCle/)の `🎞 GIF デモ` タブにも並びます。
+
+```sh
+python -S scripts/build_demo.py --out _site/demo.html
+uv run --project ../BrowserTestKit --group pages --group browser python ../BrowserTestKit/tools/evidence_gif.py docs/evidence/browser.gif --serve _site --plan docs/evidence/browser.json --force
+```
