@@ -1,39 +1,39 @@
 {
   "schema": "btk-evidence-gif/2",
   "gif": "browser.gif",
-  "bytes": 355957,
-  "sha256": "acf3c931722c34a515236eeb1fe38213f2137c6f6e9c364174e789889507f0e3",
-  "frames": 14,
+  "bytes": 436098,
+  "sha256": "85c8752bcd404fadcb4560db8933d84821f4373695a2333f482a03b7ff6ca7d2",
+  "frames": 16,
   "canvas": "720x512",
-  "browser": "chromium 158.0.8127.36",
+  "browser": "chromium 153.0.8010.12",
   "executable": {
     "source": "given",
     "path": "/usr/bin/google-chrome"
   },
   "recorded": "2026-11-25",
-  "commit": "7e50f9f9f66026437254c4cc7b63bc2a697cceff",
+  "commit": null,
   "stills": {
     "dir": null,
     "files": []
   },
   "encoder": {
     "module": "PySaiyanWeBoo gif.js",
-    "web_ui": "1d697e7f157bc75c11a6d2711475a31fc421179c",
-    "bytes": 355957,
-    "frames": 14,
+    "web_ui": "bbe5c0b0087f40ff3fffd53bec5111c2ba2d747d",
+    "bytes": 436098,
+    "frames": 16,
     "colors": 255,
     "thin": 0,
     "attempts": 1,
-    "stored": 14,
+    "stored": 16,
     "merged": 0,
-    "buckets": 20414,
+    "buckets": 7232,
     "overBudget": false,
-    "encodeMs": 560,
-    "images": 14,
+    "encodeMs": 240,
+    "images": 16,
     "reused": 0,
     "patches": 0,
     "synthesized": 0,
-    "capture_s": 14.9
+    "capture_s": 14.6
   },
   "limits": {
     "colors": 255,
@@ -42,13 +42,13 @@
     "last_hold_ms": 2000
   },
   "transfer": {
-    "screenshots": 14,
-    "png_bytes": 2107061,
+    "screenshots": 16,
+    "png_bytes": 1908739,
     "identical": 0,
     "patches": 0,
     "calls": 6,
-    "sent_bytes": 2809432,
-    "gif_bytes": 355957
+    "sent_bytes": 2545012,
+    "gif_bytes": 436098
   },
   "mapped": [],
   "summary": {
@@ -57,12 +57,54 @@
   },
   "shots": [
     {
-      "label": "📘 利用ガイド · 機能一覧",
+      "label": "📘 利用ガイド · 🧩 機能一覧",
       "url": "/index.html",
       "viewport": "1280x800",
       "steps": [
         "click label[for='ui-tabs-guide-1']",
         "scroll 340"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
+    },
+    {
+      "label": "📥 put · 📋 ls · 📤 get（そのままの出力）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click label[for='ui-tabs-guide-1']",
+        "🔲 section.ui-card:has(> h3:has-text('📥 保管庫へ入れる'))"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
+    },
+    {
+      "label": "⚡ sync（✍️ 書く → ✅ そのまま → 🧹 片付け）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click label[for='ui-tabs-guide-1']",
+        "🔲 section.ui-card:has(> h3:has-text('⚡ 使う分だけ'))"
+      ],
+      "status": "pass",
+      "errors": [],
+      "allowed": [],
+      "external": [],
+      "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
+    },
+    {
+      "label": "📐 サイズ展開（保管庫から展開した実物）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        "click label[for='ui-tabs-guide-1']",
+        "🔲 section.ui-panel:has(> h2:has-text('📐 サイズ展開の仕様'))"
       ],
       "status": "pass",
       "errors": [],
@@ -95,51 +137,11 @@
       "allowed": [],
       "external": [],
       "generator": "web_ui 1d697e7f157bc75c11a6d2711475a31fc421179c"
-    },
-    {
-      "label": "📥 put & 📋 ls（保管庫デモ）",
-      "url": "/demo.html",
-      "viewport": "1280x800",
-      "steps": [
-        "🔲 #step-put"
-      ],
-      "status": "pass",
-      "errors": [],
-      "allowed": [],
-      "external": [],
-      "generator": "CaChereCyCle build_demo.py"
-    },
-    {
-      "label": "📐 derive（サイズ展開 / .ico）",
-      "url": "/demo.html",
-      "viewport": "1280x800",
-      "steps": [
-        "click #tab-derive",
-        "🔲 on-demand"
-      ],
-      "status": "pass",
-      "errors": [],
-      "allowed": [],
-      "external": [],
-      "generator": "CaChereCyCle build_demo.py"
-    },
-    {
-      "label": "⚡ sync（キャッシュ同期と掃除）",
-      "url": "/demo.html",
-      "viewport": "1280x800",
-      "steps": [
-        "click #tab-sync"
-      ],
-      "status": "pass",
-      "errors": [],
-      "allowed": [],
-      "external": [],
-      "generator": "CaChereCyCle build_demo.py"
     }
   ],
   "plan": [
     {
-      "label": "📘 利用ガイド · 機能一覧",
+      "label": "📘 利用ガイド · 🧩 機能一覧",
       "url": "/index.html",
       "viewport": "1280x800",
       "steps": [
@@ -148,6 +150,57 @@
         },
         {
           "scroll": 340
+        }
+      ]
+    },
+    {
+      "label": "📥 put · 📋 ls · 📤 get（そのままの出力）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "label[for='ui-tabs-guide-1']"
+        },
+        {
+          "frame": {
+            "selector": "section.ui-card:has(> h3:has-text('📥 保管庫へ入れる'))",
+            "shape": "rect",
+            "color": "#10b981"
+          }
+        }
+      ]
+    },
+    {
+      "label": "⚡ sync（✍️ 書く → ✅ そのまま → 🧹 片付け）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "label[for='ui-tabs-guide-1']"
+        },
+        {
+          "frame": {
+            "selector": "section.ui-card:has(> h3:has-text('⚡ 使う分だけ'))",
+            "shape": "rect",
+            "color": "#38bdf8"
+          }
+        }
+      ]
+    },
+    {
+      "label": "📐 サイズ展開（保管庫から展開した実物）",
+      "url": "/index.html",
+      "viewport": "1280x800",
+      "steps": [
+        {
+          "click": "label[for='ui-tabs-guide-1']"
+        },
+        {
+          "frame": {
+            "selector": "section.ui-panel:has(> h2:has-text('📐 サイズ展開の仕様'))",
+            "shape": "rect",
+            "color": "#f59e0b"
+          }
         }
       ]
     },
@@ -168,48 +221,6 @@
       "steps": [
         {
           "click": "label[for='ui-tabs-guide-1']"
-        }
-      ]
-    },
-    {
-      "label": "📥 put & 📋 ls（保管庫デモ）",
-      "url": "/demo.html",
-      "viewport": "1280x800",
-      "steps": [
-        {
-          "frame": {
-            "selector": "#step-put",
-            "shape": "rect",
-            "color": "#10b981"
-          }
-        }
-      ]
-    },
-    {
-      "label": "📐 derive（サイズ展開 / .ico）",
-      "url": "/demo.html",
-      "viewport": "1280x800",
-      "steps": [
-        {
-          "click": "#tab-derive"
-        },
-        {
-          "frame": {
-            "selector": "#step-derive",
-            "shape": "rect",
-            "color": "#38bdf8",
-            "label": "on-demand"
-          }
-        }
-      ]
-    },
-    {
-      "label": "⚡ sync（キャッシュ同期と掃除）",
-      "url": "/demo.html",
-      "viewport": "1280x800",
-      "steps": [
-        {
-          "click": "#tab-sync"
         }
       ]
     }
