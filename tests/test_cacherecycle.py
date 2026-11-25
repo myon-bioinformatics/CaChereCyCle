@@ -266,6 +266,36 @@ class CommittedStoreTests(unittest.TestCase):
                     ccr._png_decode(raw)
 
 
+class GuideRunTests(unittest.TestCase):
+    """📘 The ▶️ 実行 outputs in docs/guide.page.json are real: each ``$ python -S cacherecycle.py …`` runs, in order, in an
+    empty folder holding only cacherecycle.py, icon.png and favicon.png (this repository's own), and prints what the guide shows."""
+
+    def test_guide_outputs_are_what_the_cli_prints(self):
+        page = json.loads((ROOT / "docs/guide.page.json").read_text(encoding="utf-8"))
+        tabs = next(block for block in page["blocks"] if block.get("type") == "tabs")["tabs"]
+        run = next(block for tab in tabs for block in tab["blocks"] if block.get("title") == "▶️ 実行")
+        steps, prompt = [], "$ python -S cacherecycle.py "
+        for card in run["blocks"]:
+            for block in card.get("blocks", ()):
+                for line in block["text"].splitlines() if block.get("type") == "output" else ():
+                    if line.startswith(prompt):
+                        steps.append((line[len(prompt):].split(), []))
+                    else:
+                        steps[-1][1].append(line)
+        self.assertGreaterEqual(len(steps), 9)
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+        with tempfile.TemporaryDirectory() as folder:
+            here = Path(folder)
+            (here / "cacherecycle.py").write_bytes((ROOT / "cacherecycle.py").read_bytes())
+            (here / "icon.png").write_bytes(ccr.get("CaChereCyCle.icon"))
+            (here / "favicon.png").write_bytes(ccr.get("CaChereCyCle.favicon"))
+            for argv, expected in steps:
+                with self.subTest(command=" ".join(argv)):
+                    done = subprocess.run([sys.executable, "-S", "cacherecycle.py", *argv], cwd=here, capture_output=True, env=env)
+                    printed = (done.stdout + done.stderr).decode("utf-8").replace("\\", "/").strip().splitlines()
+                    self.assertEqual(printed, expected)
+
+
 class InterfaceTests(Base):
     def test_every_result_is_json_ready_for_node_callers(self):
         ccr.put(self.file("a.png"), "a.icon", store=self.store)

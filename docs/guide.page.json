@@ -25,12 +25,12 @@
             {
               "type": "card",
               "title": "♻️ 利用ガイドと動作デモ",
-              "text": "共通利用ガイドのタブ切替・機能一覧・スマホ幅表示と、cacherecycle.py による put / ls / derive（サイズ展開と .ico）/ sync（キャッシュ同期と掃除）の実動作を Chromium で記録したデモです。",
+              "text": "共通の利用ガイドを Chromium で撮ったデモです。🧩 機能一覧の ▶️ 実行 に載っている出力は、cacherecycle.py を空のフォルダで実際に動かした結果そのままです（tests がガイドと突き合わせます）。",
               "blocks": [
                 {
                   "type": "image",
                   "src": "./demos/browser.gif",
-                  "alt": "CaChereCyCle の利用ガイド（機能一覧・機能全一覧・スマホ幅）と put / ls / derive / sync の実動作デモ"
+                  "alt": "CaChereCyCle の利用ガイド（put / ls / get / sync / drop の実行結果、サイズ展開、機能全一覧、スマホ幅）"
                 }
               ]
             }
@@ -59,11 +59,31 @@
               "blocks": [
                 {
                   "type": "table",
-                  "headers": ["役割", "置き場所", "中身", "寿命"],
+                  "headers": [
+                    "役割",
+                    "置き場所",
+                    "中身",
+                    "寿命"
+                  ],
                   "rows": [
-                    ["🏛 保管庫", "store.jsonl（このリポジトリ）", "1 行 = 1 資産 {\"id\",\"sha256\",\"mime\",\"b64\"}、id 順", "恒久"],
-                    ["🏷 参照", "各リポジトリの既存 JSON / pages.yml", "id だけ（例 OnTautoLogy.favicon）", "恒久"],
-                    ["⚡ 手元", ".cache/assets/（gitignore）", "sync が書く <id><ext>", "いつ消してもよい"]
+                    [
+                      "🏛 保管庫",
+                      "store.jsonl（このリポジトリ）",
+                      "1 行 = 1 資産 {\"id\",\"sha256\",\"mime\",\"b64\"}、id 順",
+                      "恒久"
+                    ],
+                    [
+                      "🏷 参照",
+                      "各リポジトリの既存 JSON / pages.yml",
+                      "id だけ（例 OnTautoLogy.favicon）",
+                      "恒久"
+                    ],
+                    [
+                      "⚡ 手元",
+                      ".cache/assets/（gitignore）",
+                      "sync が書く <id><ext>",
+                      "いつ消してもよい"
+                    ]
                   ]
                 }
               ]
@@ -73,35 +93,50 @@
               "title": "▶️ 実行",
               "blocks": [
                 {
+                  "type": "text",
+                  "text": "📂 cacherecycle.py だけを置いた空のフォルダで、このリポジトリのアイコン（icon.png）とファビコン（favicon.png）を入れて動かした、そのままの出力です。保管庫は cacherecycle.py の隣の store.jsonl です。"
+                },
+                {
                   "type": "card",
                   "title": "📥 保管庫へ入れる（put）",
-                  "text": "同じ中身ならファイルを書き換えず ♻️ を返します（既定上限 1 MiB、--max-bytes 0 で解除）。GIF デモなど大きい媒体はファイルのまま残します。",
+                  "text": "同じ中身なら書き換えず ♻️。既定の上限は 1 MiB（--max-bytes 0 で解除）。GIF デモなど大きいものはファイルのまま残します。",
                   "blocks": [
                     {
                       "type": "output",
-                      "text": "$ python cacherecycle.py put docs/brand/favicon.png --id OnTautoLogy.favicon\n📥 OnTautoLogy.favicon  image/png  1893 B  21609afe"
+                      "text": "$ python -S cacherecycle.py put icon.png --id CaChereCyCle.icon\n📥 CaChereCyCle.icon  image/png  333243 B  384127c4\n$ python -S cacherecycle.py put icon.png --id CaChereCyCle.icon\n♻️ CaChereCyCle.icon  image/png  333243 B  384127c4\n$ python -S cacherecycle.py put favicon.png --id CaChereCyCle.favicon\n📥 CaChereCyCle.favicon  image/png  9362 B  e4451516"
                     }
                   ]
                 },
                 {
                   "type": "card",
-                  "title": "📋 一覧・📤 取り出し・🗑 削除（ls / get / drop）",
-                  "text": "取り出し時に SHA-256 を検証し、破損や誤記を即座に検出します。",
+                  "title": "📋 一覧・📤 取り出す（ls / get）",
+                  "text": "取り出すときに SHA-256 を確かめます。@ を付けると、その場でサイズ展開します。打ち間違いには候補を出します。",
                   "blocks": [
                     {
                       "type": "output",
-                      "text": "$ python cacherecycle.py ls\n$ python cacherecycle.py get OnTautoLogy.favicon --out favicon.png\n$ python cacherecycle.py drop OnTautoLogy.favicon"
+                      "text": "$ python -S cacherecycle.py ls\n🧊 CaChereCyCle.favicon  image/png  9362 B  e4451516\n🧊 CaChereCyCle.icon  image/png  333243 B  384127c4\n$ python -S cacherecycle.py get CaChereCyCle.icon@192 --out icon-192.png\n📤 CaChereCyCle.icon@192 → icon-192.png\n$ python -S cacherecycle.py get CaChereCyCle.favicon@16,32,48 --out favicon.ico\n📤 CaChereCyCle.favicon@16,32,48 → favicon.ico\n$ python -S cacherecycle.py get CaChereCyCle.icom --out x.png\n❌ unknown id 'CaChereCyCle.icom' (did you mean 'CaChereCyCle.icon'?)"
                     }
                   ]
                 },
                 {
                   "type": "card",
-                  "title": "⚡ 使う分だけ手元へ同期（sync）",
-                  "text": "ID@spec または NAME=ID@spec で手元キャッシュへ書き出します。変更がない派生画像は作り直さず、自分が前に書いた不要ファイルだけを 🧹 片付けます。",
+                  "title": "⚡ 使う分だけ手元へそろえる（sync）",
+                  "text": "ID@spec か NAME=ID@spec を .cache/assets/ に書きます。2 回目は ✅ で作り直さず、外した分は自分が書いたものだけ 🧹 片付けます。",
                   "blocks": [
                     {
                       "type": "output",
-                      "text": "$ python cacherecycle.py sync OnTautoLogy.favicon OnTautoLogy.icon --cache _site/brand\n$ python cacherecycle.py sync favicon.ico=xprobe.favicon@16,32,48 icon-180.png=xprobe.icon@180:opaque icon-512.png=xprobe.icon@512 --cache _site"
+                      "text": "$ python -S cacherecycle.py sync CaChereCyCle.icon favicon.ico=CaChereCyCle.favicon@16,32,48 icon-180.png=CaChereCyCle.icon@180:opaque\n✍️ .cache/assets/CaChereCyCle.icon.png\n✍️ .cache/assets/favicon.ico\n✍️ .cache/assets/icon-180.png\n$ python -S cacherecycle.py sync CaChereCyCle.icon favicon.ico=CaChereCyCle.favicon@16,32,48 icon-180.png=CaChereCyCle.icon@180:opaque\n✅ .cache/assets/CaChereCyCle.icon.png\n✅ .cache/assets/favicon.ico\n✅ .cache/assets/icon-180.png\n$ python -S cacherecycle.py sync favicon.ico=CaChereCyCle.favicon@16,32,48 icon-180.png=CaChereCyCle.icon@180:opaque\n✅ .cache/assets/favicon.ico\n✅ .cache/assets/icon-180.png\n🧹 .cache/assets/CaChereCyCle.icon.png"
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "title": "🗑 消す（drop）",
+                  "text": "保管庫から 1 行を消します。",
+                  "blocks": [
+                    {
+                      "type": "output",
+                      "text": "$ python -S cacherecycle.py drop CaChereCyCle.icon\n🗑 CaChereCyCle.icon  image/png  333243 B  384127c4"
                     }
                   ]
                 }
@@ -117,12 +152,73 @@
                 },
                 {
                   "type": "table",
-                  "headers": ["spec", "出力"],
+                  "headers": [
+                    "spec",
+                    "出力"
+                  ],
                   "rows": [
-                    ["ID", "保管したバイト列そのまま"],
-                    ["ID@192", "192 px の正方形 PNG（透過を保つ）"],
-                    ["ID@180:opaque", "透過を左上の色（透明なら白）で塗った PNG（ホーム画面用）"],
-                    ["ID@16,32,48", "指定サイズをすべて格納した .ico"]
+                    [
+                      "ID",
+                      "保管したバイト列そのまま"
+                    ],
+                    [
+                      "ID@192",
+                      "192 px の正方形 PNG（透過を保つ）"
+                    ],
+                    [
+                      "ID@180:opaque",
+                      "透過を左上の色（透明なら白）で塗った PNG（ホーム画面用）"
+                    ],
+                    [
+                      "ID@16,32,48",
+                      "指定サイズをすべて格納した .ico"
+                    ]
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": "🖼 この利用ガイドのアイコンも、公開のたびに保管庫から展開しています（親の reusable-pages-static.yml の guide_brand。下はその実物）。"
+                },
+                {
+                  "type": "card",
+                  "title": "CaChereCyCle.icon",
+                  "text": "保管したまま（透過）",
+                  "blocks": [
+                    {
+                      "type": "image",
+                      "src": "./icon.png",
+                      "alt": "CaChereCyCle.icon",
+                      "width": 96,
+                      "height": 96
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "title": "CaChereCyCle.icon@180:opaque",
+                  "text": "180 px・透過を塗る（ホーム画面用）",
+                  "blocks": [
+                    {
+                      "type": "image",
+                      "src": "./icon-180.png",
+                      "alt": "CaChereCyCle.icon@180:opaque",
+                      "width": 96,
+                      "height": 96
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "title": "CaChereCyCle.favicon",
+                  "text": "保管したまま（ファビコン）",
+                  "blocks": [
+                    {
+                      "type": "image",
+                      "src": "./favicon.png",
+                      "alt": "CaChereCyCle.favicon",
+                      "width": 64,
+                      "height": 64
+                    }
                   ]
                 }
               ]

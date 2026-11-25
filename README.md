@@ -63,13 +63,19 @@ Python 3.11+ · 🧪 `python -S -m unittest discover -s tests`
 
 ## 🎞️ Demo
 
-![CaChereCyCle usage guide and live put / ls / derive / sync demo in Chromium](docs/evidence/browser.gif)
+![CaChereCyCle の利用ガイド: put / ls / get / sync / drop のそのままの出力、サイズ展開の実物、機能全一覧、スマホ幅](docs/evidence/browser.gif)
 
-🗓️ 2026-11-25 · 🧭 Chromium 158 · 🐧 Linux · receipt [`docs/evidence/browser.json`](docs/evidence/browser.json)
+🗓️ 2026-11-25 · 🧭 Chromium 153 · 🐧 Linux · receipt [`docs/evidence/browser.json`](docs/evidence/browser.json)
 
-同じ GIF は[利用ガイド](https://myon-bioinformatics.github.io/CaChereCyCle/)の `🎞 GIF デモ` タブにも並びます。
+同じ GIF は[利用ガイド](https://myon-bioinformatics.github.io/CaChereCyCle/)の `🎞 GIF デモ` タブにも並びます。▶️ 実行 の出力は、空のフォルダで実際に動かした結果そのままで、`tests/`（GuideRunTests）がガイドと突き合わせます。
 
 ```sh
-python -S scripts/build_demo.py --out _site/demo.html
+# 📘 利用ガイドを手元で組む（親の reusable-pages-static.yml と同じ手順。PySaiyanWeBoo は親の WEB_UI のピン）
+mkdir -p _site/demos && cp docs/evidence/browser.gif _site/demos/ && cp docs/guide.page.json _site/
+python -S cacherecycle.py sync icon.png=CaChereCyCle.icon favicon.png=CaChereCyCle.favicon icon-180.png=CaChereCyCle.icon@180:opaque \
+  icon-192.png=CaChereCyCle.icon@192:opaque icon-512.png=CaChereCyCle.icon@512:opaque --cache _site && rm _site/.cacherecycle.json
+uv run --no-project --with "pysaiyanweboo @ git+https://github.com/myon-bioinformatics/PySaiyanWeBoo@1d697e7f157bc75c11a6d2711475a31fc421179c" \
+  python -m pysaiyanweboo --page _site/guide.page.json --home-screen _site --features cacherecycle.py --repository myon-bioinformatics/CaChereCyCle > _site/index.html
+# 🎞 撮る（BrowserTestKit の evidence_gif.py。browser.json の plan がそのまま手順）
 uv run --project ../BrowserTestKit --group pages --group browser python ../BrowserTestKit/tools/evidence_gif.py docs/evidence/browser.gif --serve _site --plan docs/evidence/browser.json --force
 ```
