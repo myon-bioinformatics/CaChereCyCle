@@ -140,6 +140,23 @@ class StoreTests(Base):
         self.assertEqual(ccr.ls(store=self.store), [])
         self.assertFalse(self.store.exists())
 
+    def test_markdown_round_trip_and_ls_filters(self):
+        md = "# ♻️ メモ\n\nLow-frequency archive note.\n".encode("utf-8")
+        meta = ccr.put(self.file("note.md", md), "Aoi.archive.note", store=self.store)
+        ccr.put(self.file("a.png"), "Aoi.icon", store=self.store)
+        ccr.put(self.file("other.md", b"# Other\n"), "xprobe.notes.other", store=self.store)
+        self.assertEqual(meta["mime"], "text/markdown")
+        self.assertEqual(ccr.get("Aoi.archive.note", store=self.store), md)
+        self.assertEqual([m["id"] for m in ccr.ls(prefix="aoi.", store=self.store)],
+                         ["Aoi.archive.note", "Aoi.icon"])
+        self.assertEqual([m["id"] for m in ccr.ls(mime="text/markdown", store=self.store)],
+                         ["Aoi.archive.note", "xprobe.notes.other"])
+        self.assertEqual([m["id"] for m in ccr.ls(prefix="aoi.", mime="text/markdown", store=self.store)],
+                         ["Aoi.archive.note"])
+        report = ccr.sync(["Aoi.archive.note", "README.md=xprobe.notes.other"], store=self.store, cache=self.cache)
+        self.assertEqual(sorted(Path(p).name for p in report["written"]), ["Aoi.archive.note.md", "README.md"])
+        self.assertEqual((self.cache / "Aoi.archive.note.md").read_bytes(), md)
+
 
 class SyncTests(Base):
     def test_sync_writes_keeps_and_removes_only_its_own_files(self):
@@ -309,6 +326,8 @@ class InterfaceTests(Base):
         self.assertEqual(self.cli("put", str(source), "--id", "a.icon")[0], 0)
         self.assertIn("♻️", self.cli("put", str(source), "--id", "a.icon")[1])
         self.assertIn("🧊 a.icon", self.cli("ls")[1])
+        self.assertIn("🧊 a.icon", self.cli("ls", "a.", "--mime", "image/png")[1])
+        self.assertIn("🫙", self.cli("ls", "--mime", "text/markdown")[1])
         out = self.dir / "out.png"
         self.assertEqual(self.cli("get", "a.icon", "--out", str(out))[0], 0)
         self.assertEqual(out.read_bytes(), PNG)

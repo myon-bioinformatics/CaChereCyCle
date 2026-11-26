@@ -26,8 +26,9 @@ One JSONL store for small assets (icons, favicons, diagrams) kept as Base64 — 
 ```sh
 # 📥 入れる（同じ中身なら何もしない。既定の上限 1 MiB、--max-bytes 0 で解除）
 python cacherecycle.py put docs/brand/favicon.png --id OnTautoLogy.favicon
-# 📋 一覧 / 📤 取り出す / 🗑 消す
+# 📋 一覧（prefix や --mime で絞り込み可） / 📤 取り出す（--out - で標準出力） / 🗑 消す
 python cacherecycle.py ls
+python cacherecycle.py ls Aoi. --mime text/markdown
 python cacherecycle.py get OnTautoLogy.favicon --out favicon.png
 python cacherecycle.py drop OnTautoLogy.favicon
 # ⚡ 参照している id だけを手元へ（自分が前に書いた不要分は 🧹 片付け）
@@ -61,6 +62,7 @@ call("cacherecycle.py", "sync", { args: [["OnTautoLogy.icon"]], kwargs: { cache:
 ```
 
 - 🏷 id は `<リポジトリ名>.<何か>`。リポジトリ名は表記どおり（`Err-o-RoadRunner.icon`・`OnTautoLogy.favicon`・`myon-bioinformatics.github.io.icon`、`A-Z a-z 0-9 _ -` とドット区切り）。大文字小文字だけ違う id は入れない（Windows・macOS では同じファイル名になる）。そのまま手元のファイル名になる
+- 📝 利用頻度・更新頻度・情報量の低い `.md`（アーカイブ済みの調査メモ等）も `text/markdown` として `<リポジトリ名>.<パスをドット区切り>`（拡張子 `.md` なし → `sync` で `.md` が付く）でキャッシュ保持できる。ただしルート `README.md`・`AGENTS.md`・`GENESIS.md`・`propositions` 等のコア文書は Git に残し、複数リポジトリに重複した同一説明はキャッシュではなく 1 か所へ統合して整理する
 - 🔑 `sha256` で中身を照合：同じなら書かない・壊れていれば止まる
 - 📏 GIF デモなど大きいものはファイルのまま（README が data URI の画像を表示しないため）
 - 🌐 公開リポジトリなので、公開してよい資産だけを置く
