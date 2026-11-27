@@ -21,6 +21,8 @@ import json
 import mimetypes
 import os
 import re
+import secrets
+import stat
 import struct
 import sys
 import tempfile
@@ -299,6 +301,40 @@ def _item(item: str) -> tuple[str | None, str]:
     return name, spec
 
 
+def _write_cache(target: Path, data: bytes) -> None:
+    """Replace the cache entry itself, without writing through a leaf link."""
+    try:
+        previous = target.lstat()
+    except FileNotFoundError:
+        previous = None
+    mode = (stat.S_IMODE(previous.st_mode) & 0o777
+            if previous and stat.S_ISREG(previous.st_mode) and previous.st_nlink == 1 else None)
+    # O_EXCL rejects existing entries, including symlinks. Mode 0666 lets the
+    # OS apply umask as for Path.write_bytes, without changing process state.
+    flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0)
+    for _ in range(100):
+        temporary = target.parent / (".cacherecycle-" + secrets.token_hex(16) + ".tmp")
+        try:
+            fd = os.open(temporary, flags, 0o666)
+            break
+        except FileExistsError:
+            continue
+    else:
+        raise FileExistsError("could not allocate a temporary cache file")
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            if mode is not None and hasattr(os, "fchmod"):
+                os.fchmod(handle.fileno(), mode)
+        os.replace(temporary, target)
+    except BaseException as error:
+        try:
+            Path(temporary).unlink(missing_ok=True)
+        except OSError as cleanup_error:
+            error.add_note(f"could not remove temporary cache file {temporary!r}: {cleanup_error}")
+        raise
+
+
 def sync(items: Iterable[str], *, store: str | os.PathLike[str] = STORE,
          cache: str | os.PathLike[str] = CACHE) -> dict[str, list[str]]:
     """⚡ Make ``cache`` hold the wanted items: ``ID`` / ``ID@…`` (named after the spec) or ``NAME=ID@…``.
@@ -331,7 +367,7 @@ def sync(items: Iterable[str], *, store: str | os.PathLike[str] = STORE,
             report["kept"].append(target.as_posix())
             continue
         data = _derive(rows, spec)[0]
-        target.write_bytes(data)
+        _write_cache(target, data)
         index[name] = {"from": spec, "source": source, "sha256": hashlib.sha256(data).hexdigest()}
         report["written"].append(target.as_posix())
     for name in sorted(set(before) - set(index)):
@@ -339,7 +375,7 @@ def sync(items: Iterable[str], *, store: str | os.PathLike[str] = STORE,
         if isinstance(name, str) and _NAME.match(name) and old.is_file():
             old.unlink()
             report["removed"].append(old.as_posix())
-    index_path.write_text(json.dumps(index, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    _write_cache(index_path, (json.dumps(index, indent=1, sort_keys=True) + "\n").encode("utf-8"))
     return report
 
 
