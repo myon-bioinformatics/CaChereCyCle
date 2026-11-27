@@ -69,6 +69,10 @@ call("cacherecycle.py", "sync", { args: [["OnTautoLogy.icon"]], kwargs: { cache:
 
 Python 3.11+ · 🧪 `python -S -m unittest discover -s tests`
 
+[Formal ownership checks](docs/formal-verification.md) prove which old manifest
+names the deletion phase may remove, and why repeating a successful request
+does not delete current outputs. Real-file tests connect the model to `sync`.
+
 ## 🎞️ Demo
 
 ![CaChereCyCle の利用ガイド: put / ls / get / sync / drop のそのままの出力、サイズ展開の実物、機能全一覧、スマホ幅](docs/evidence/browser.gif)
