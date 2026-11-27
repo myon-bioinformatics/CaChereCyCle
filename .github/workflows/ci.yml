@@ -12,7 +12,7 @@ jobs:
   actionlint:
     permissions:
       contents: read
-    uses: myon-bioinformatics/myon-bioinformatics/.github/workflows/reusable-actionlint.yml@6c2558c4251698c50bc07bad86fb49f902b2738f
+    uses: myon-bioinformatics/myon-bioinformatics/.github/workflows/reusable-actionlint.yml@27c46411c0a07d9b4d0f1ad5751ed1bb9e869b5c
 
   test:
     name: unittest (${{ matrix.os }}, Python ${{ matrix.python }})
@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: myon-bioinformatics/myon-bioinformatics
-          ref: 6c2558c4251698c50bc07bad86fb49f902b2738f
+          ref: 27c46411c0a07d9b4d0f1ad5751ed1bb9e869b5c
           path: .parent
           sparse-checkout: py_launch.cjs
           sparse-checkout-cone-mode: false
