@@ -37,7 +37,13 @@ _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)*\Z")  # <Reposi
 _SPEC = re.compile(r"(?P<id>[^@:=]+)(?:@(?P<sizes>[1-9][0-9]*(?:,[1-9][0-9]*)*)(?P<opaque>:opaque)?)?\Z")
 _NAME = re.compile(r"[A-Za-z0-9_-][A-Za-z0-9._-]*\Z")
 _MIME = mimetypes.MimeTypes()  # a fresh table: the same answer on every OS (no Windows registry)
+if _MIME.guess_type("a.md")[0] != "text/markdown":
+    _MIME.add_type("text/markdown", ".md")
 _PNG = b"\x89PNG\r\n\x1a\n"
+
+
+def _ext(mime: str) -> str:
+    return ".md" if mime == "text/markdown" else (_MIME.guess_extension(mime) or "")
 
 
 def _id(value: object) -> str:
@@ -120,9 +126,11 @@ def get(id: str, *, store: str | os.PathLike[str] = STORE) -> bytes:
     return base64.b64decode(entry(id, store=store)["b64"])
 
 
-def ls(*, store: str | os.PathLike[str] = STORE) -> list[dict[str, object]]:
-    """📋 Every entry without its Base64, sorted by id."""
-    return [_meta(row) for _, row in sorted(_load(store).items(), key=lambda item: item[0].casefold())]
+def ls(*, prefix: str = "", mime: str | None = None, store: str | os.PathLike[str] = STORE) -> list[dict[str, object]]:
+    """📋 Every entry without its Base64, sorted by id (optionally filtered by id prefix or MIME type)."""
+    return [_meta(row) for key, row in sorted(_load(store).items(), key=lambda item: item[0].casefold())
+            if (not prefix or key.casefold().startswith(prefix.casefold()))
+            and (mime is None or row["mime"] == mime)]
 
 
 def drop(id: str, *, store: str | os.PathLike[str] = STORE) -> dict[str, object]:
@@ -311,7 +319,7 @@ def sync(items: Iterable[str], *, store: str | os.PathLike[str] = STORE,
         id, sizes, opaque = _spec(spec)
         source = _row(rows, id)["sha256"]
         if name is None:
-            ext = (".png" if len(sizes) == 1 else ".ico") if sizes else (_MIME.guess_extension(rows[id]["mime"]) or "")
+            ext = (".png" if len(sizes) == 1 else ".ico") if sizes else _ext(rows[id]["mime"])
             name = id + ("." + "-".join(map(str, sizes)) + ("-opaque" if opaque else "") if sizes else "") + ext
         if name in index:
             raise ValueError(f"two items write {name!r}")
@@ -353,7 +361,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("get", help="📤 write the bytes of a spec (ID, ID@192, ID@180:opaque, ID@16,32,48) to a file")
     p.add_argument("spec")
     p.add_argument("--out", required=True, help="output file, or - for stdout")
-    sub.add_parser("ls", help="📋 list entries")
+    p = sub.add_parser("ls", help="📋 list entries")
+    p.add_argument("prefix", nargs="?", default="", help="optional id prefix (case-insensitive), e.g. Aoi.")
+    p.add_argument("--mime", help="filter by MIME type, e.g. text/markdown")
     p = sub.add_parser("drop", help="🗑 remove an entry")
     p.add_argument("id")
     p = sub.add_parser("sync", help="⚡ write the wanted items (ID@… or NAME=ID@…) into the cache and tidy it")
@@ -375,7 +385,7 @@ def main(argv: list[str] | None = None) -> int:
                 Path(args.out).write_bytes(data)
                 print(f"📤 {args.spec} → {args.out}")
         elif args.command == "ls":
-            rows = ls(store=args.store)
+            rows = ls(prefix=args.prefix, mime=args.mime, store=args.store)
             print("\n".join(_line(meta, "🧊") for meta in rows) if rows else "🫙 (empty)")
         elif args.command == "drop":
             print(_line(drop(args.id, store=args.store), "🗑"))
