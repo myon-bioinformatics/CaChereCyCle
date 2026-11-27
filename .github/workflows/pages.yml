@@ -8,6 +8,8 @@ on:
     branches: [main]
     paths:
       - "docs/guide.page.json"
+      - "docs/capacity.js"
+      - "scripts/add_capacity.py"
       - "docs/evidence/browser.gif"
       - "store.jsonl"
       - "cacherecycle.py"
@@ -15,6 +17,8 @@ on:
   pull_request:
     paths:
       - "docs/guide.page.json"
+      - "docs/capacity.js"
+      - "scripts/add_capacity.py"
       - "docs/evidence/browser.gif"
       - "store.jsonl"
       - "cacherecycle.py"
@@ -31,5 +35,6 @@ jobs:
     with:
       artifact_path: _site
       guide_page: docs/guide.page.json
-      guide_assets: docs/evidence/browser.gif=demos/browser.gif
+      guide_assets: docs/evidence/browser.gif=demos/browser.gif docs/capacity.js=capacity.js
+      build: python3 -S scripts/add_capacity.py _site/index.html
       guide_brand: CaChereCyCle   # ♻️ icon and favicon from CaChereCyCle (CaChereCyCle.icon / CaChereCyCle.favicon)
