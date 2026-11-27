@@ -324,7 +324,7 @@ def _write_cache(target: Path, data: bytes) -> None:
     try:
         with os.fdopen(fd, "wb") as handle:
             handle.write(data)
-            if mode is not None and hasattr(os, "fchmod"):
+            if mode is not None and os.name == "posix" and hasattr(os, "fchmod"):
                 os.fchmod(handle.fileno(), mode)
         os.replace(temporary, target)
     except BaseException as error:

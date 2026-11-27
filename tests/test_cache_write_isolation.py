@@ -16,6 +16,7 @@ import cacherecycle as ccr
 OLD = b'old cached bytes'
 NEW = b'updated cached bytes\x00\xff'
 OUTSIDE = b'unrelated outside bytes'
+POSIX_MODES = os.name == 'posix' and hasattr(os, 'fchmod')
 
 
 class CacheWriteIsolationTests(unittest.TestCase):
@@ -54,7 +55,7 @@ class CacheWriteIsolationTests(unittest.TestCase):
     def test_existing_symlink_is_replaced_without_writing_outside(self):
         outside = self.root / 'outside.bin'
         outside.write_bytes(OUTSIDE)
-        if hasattr(os, 'fchmod'):
+        if POSIX_MODES:
             outside.chmod(0o400)
         self.symlink(outside)
         self.update_source()
@@ -63,7 +64,7 @@ class CacheWriteIsolationTests(unittest.TestCase):
         self.assertFalse(self.target.is_symlink())
         self.assertEqual(self.target.read_bytes(), NEW)
         self.assertEqual(report['written'], [self.target.as_posix()])
-        if hasattr(os, 'fchmod'):
+        if POSIX_MODES:
             self.assertEqual(stat.S_IMODE(outside.stat().st_mode), 0o400)
             self.assertEqual(stat.S_IMODE(self.target.stat().st_mode),
                              stat.S_IMODE(self.source.stat().st_mode))
@@ -82,7 +83,7 @@ class CacheWriteIsolationTests(unittest.TestCase):
     def test_hardlinked_cache_update_preserves_external_inode_contents(self):
         outside = self.root / 'outside.bin'
         outside.write_bytes(OUTSIDE)
-        if hasattr(os, 'fchmod'):
+        if POSIX_MODES:
             outside.chmod(0o400)
         self.target.unlink()
         try:
@@ -94,7 +95,7 @@ class CacheWriteIsolationTests(unittest.TestCase):
         self.assertEqual(outside.read_bytes(), OUTSIDE)
         self.assertEqual(self.target.read_bytes(), NEW)
         self.assertFalse(os.path.samefile(outside, self.target))
-        if hasattr(os, 'fchmod'):
+        if POSIX_MODES:
             self.assertEqual(stat.S_IMODE(outside.stat().st_mode), 0o400)
             self.assertEqual(stat.S_IMODE(self.target.stat().st_mode),
                              stat.S_IMODE(self.source.stat().st_mode))
@@ -117,7 +118,7 @@ class CacheWriteIsolationTests(unittest.TestCase):
                 self.assertFalse(self.index.is_symlink())
                 self.assertEqual(self.index.read_bytes(), b'{}\n')
 
-    @unittest.skipUnless(hasattr(os, 'fchmod'), 'requires POSIX permission bits')
+    @unittest.skipUnless(POSIX_MODES, 'requires POSIX permission bits')
     def test_regular_file_update_preserves_existing_permission_bits(self):
         self.target.chmod(0o640)
         self.index.chmod(0o644)
@@ -226,7 +227,7 @@ with tempfile.TemporaryDirectory() as directory:
         leftovers = list(self.cache.glob('.cacherecycle-*.tmp'))
         self.assertEqual(len(leftovers), 1)
         notes = '\n'.join(caught.exception.__notes__)
-        self.assertIn(str(leftovers[0]), notes)
+        self.assertIn(repr(leftovers[0]), notes)
         self.assertIn('injected cleanup failure', notes)
 
 
