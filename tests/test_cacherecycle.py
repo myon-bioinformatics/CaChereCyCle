@@ -15,6 +15,8 @@ import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+from vendor.cli_args import run_cli
 sys.path.insert(0, str(ROOT))
 
 import cacherecycle as ccr  # noqa: E402
@@ -342,8 +344,8 @@ class InterfaceTests(Base):
 
     def test_cli_runs_without_site_packages(self):
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
-        done = subprocess.run([sys.executable, "-S", str(ROOT / "cacherecycle.py"), "--store", str(self.store), "ls"],
-                              capture_output=True, text=True, encoding="utf-8", env=env, check=False)
+        done = run_cli(ROOT / "cacherecycle.py", "--store", str(self.store), "ls",
+                       python_options=("-S",), env=env)
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertIn("🫙", done.stdout)
 
